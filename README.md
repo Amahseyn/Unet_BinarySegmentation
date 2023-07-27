@@ -91,3 +91,4 @@ Follow these steps to use the SMP model for image segmentation:
 7.Finally, test the model on the test dataset and obtain the evaluation results.
 ## Contributing
 If you find any issues or have suggestions for improvements, please feel free to contribute by opening an issue or submitting a pull request. You can contact me via email at [mhhashemi1379@gmail.com] for any inquiries or discussions related to the project.
+# Unet_BinarySegmentation
