@@ -1,5 +1,16 @@
-#You need to install segmentation-model-pytorch with this command : pip install segmentation-models-pytorch
-#Install Pytorch according this link : #https://pytorch.org/get-started
+#You need to install this libraries : 
+#Pytorch : Install Pytorch according this link ---> #https://pytorch.org/get-started
+
+#SMP(Segmentatio Model Pytorch) : "pip install segmentation-models-pytorch"
+
+#Numpy 
+#install numpy with pip--->"pip install numpy "
+#install numpy with conda ---> step1:"conda config --env --add channels conda-forge" step2:"conda install numpy"
+
+#Pillow :
+#install pillow with pip ---> step1:"python3 -m pip install --upgrade pip" step2:"python3 -m pip install --upgrade Pillow"
+#install pillow with conda ----> "conda install -c anaconda pillow"
+
 import torch
 import torchvision.transforms as T
 from torch.utils.data import DataLoader
@@ -11,9 +22,11 @@ import numpy as np
 import os
 from PIL import Image
 from torch.utils.data import Dataset
+import matplotlib.pyplot as plt 
 
 # Path to the directory . This Directory should have three folder with name of "train" ,  "validation", "test". Each folder should contain two folder "0" , "1".
 data_dir = "path to your Directory"
+model_path ="path to save your model"
 image_size = 512
 batch = 2
 epochs = 10
@@ -28,7 +41,7 @@ class CustomDataset(Dataset):
         self.transform = transform
         self.image_format = image_format
         self.image_dir = os.path.join(data_dir)
-        self.mask_dir = os.path.join(data_dir)
+        self.mask_dir = os.path.join(data_dir+str("mask"))
         self.classes_dir = os.listdir(self.image_dir)
         self.image_filenames = sorted([f for f in os.listdir(self.image_dir) if f.endswith(f".{image_format}")])
         self.image_size = image_size
@@ -100,6 +113,10 @@ model.to(device)
 criterion = smp.losses.JaccardLoss(mode = "binary")
 criterion.to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
+train_acc_array = []
+train_loss_array = []
+val_acc_array = []
+val_loss_array = []
 
 for epoch in range(epochs):
     model.train()
@@ -130,6 +147,8 @@ for epoch in range(epochs):
 
     average_loss = running_loss / len(train_loader)
     average_iou_score = total_iou_score / len(train_loader)
+    train_acc_array.append(average_iou_score)
+    train_loss_array.append(average_loss)
     print(f"Epoch [{epoch + 1}/{epochs}], Training Loss: {average_loss:.4f},Training IoU: {average_iou_score:.4f}")
 
     # Validation loop
@@ -153,6 +172,8 @@ for epoch in range(epochs):
 
     average_val_loss = val_loss / len(val_loader)
     average_val_iou_score = val_total_iou_score / len(val_loader)
+    val_acc_array.append(average_val_iou_score)
+    val_loss_array.append(average_val_loss)
     print(f"Epoch [{epoch + 1}/{epochs}], Validation Loss: {average_val_loss:.4f},  Validation IoU: {average_val_iou_score:.4f}")
 
 
@@ -181,3 +202,23 @@ with torch.no_grad():
     average_loss = test_loss / len(test_loader)
     average_iou_score = total_iou_score / len(test_loader)
     print(f"Epoch [{epoch + 1}/{epochs}], Training Loss: {average_loss:.4f},Training IoU: {average_iou_score:.4f}")
+torch.save(model.state_dict(), model_path)
+fig = plt.figure()
+
+plt.subplot(111)
+plt.plot(np.arange(1,epochs+1),train_acc_array)
+plt.plot(np.arange(1,epochs+1),val_acc_array)
+plt.title("Accuray")
+plt.xlabel("Epochs")
+plt.ylabel("Acc")
+plt.legend(["Train Acc","Test Acc"],loc = "lower right")
+plt.show()
+fig = plt.figure()
+plt.subplot(111)
+plt.plot(np.arange(1,epochs+1),train_loss_array)
+plt.plot(np.arange(1,epochs+1),val_loss_array)
+plt.title("Losss")
+plt.xlabel("Epochs")
+plt.ylabel("Acc")
+plt.legend(["train loss", "valid loss"], loc="upper right")
+plt.show()
